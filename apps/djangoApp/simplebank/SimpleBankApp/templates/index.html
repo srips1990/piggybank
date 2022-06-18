@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transact</title>
+	{% load static %}
+    <link href="{% static 'css/common.css' %}" rel="stylesheet">
+</head>
+<body>
+	{% csrf_token %}
+    <h1>Contract - {{ contract_address }}</h1>
+    <b>Contract Balance:</b>&nbsp;&nbsp;<span id="contract_balance">{{ contract_balance }}</span>&nbsp;ETH
+    <br><br>
+    <form>
+        <br><h3>Select your Address:</h3>
+        <table>
+            <tr>
+                <td></td><td>Address:</td>
+                <td>
+                    <select id="from_addr">
+                    {% for account in accounts %}
+                        <option value={{ account.index }}>{{ account.address }} ({{ account.role }})</option>
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>&ensp;<span id="balance"></span>&nbsp;ETH</td>
+            </tr>
+            <tr><td></td><td>Allowance:&ensp;</td><td><span id="user_allowance"></span>&nbsp;ETH</td><td></td></tr>
+        </table>
+    </form>
+
+    <br>
+
+    <hr>
+
+    <form>
+        <table>
+            <tr><td></td><td><b>Deposit</b><br></td></tr>
+            <tr><td></td><td>Quantity &ensp;&ensp;</td><td><input type="text" id="deposit_qty"></td></tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td><button id="btn_deposit" type="button" class="btn">Deposit</button></td>
+            </tr>
+            <tr>
+                <td colspan="3"></td>
+            </tr>
+        </table>
+    </form>
+    <span id="deposit_status"></span>
+
+    <hr>
+
+    <form>
+        <table>
+            <tr>
+                <td></td>
+                <td><b>Grant Allowance:</b><br></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td><td>To Address:</td>
+                <td>
+                    <select id="grant_to_addr">
+                    {% for account in accounts %}
+                        <option value={{ account.index }}>{{ account.address }} ({{ account.role }})</option>
+                    {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr><td></td><td>Quantity</td><td><input type="text" id="grant_qty"></td></tr>
+            <tr>
+                <td></td>
+                <td>&ensp;</td>
+                <td><button id="btn_grant_allowance" type="button" class="btn">Grant</button></td>
+            </tr>
+            <tr>
+                <td colspan="3"><span id="grant_status"></span></td>
+            </tr>
+        </table>
+    </form>
+    <hr>
+    <form>
+        <table>
+            <tr><td></td><td><b>Withdraw</b><br></td><td></td></tr>
+            <tr><td></td><td>Amount</td><td><input type="text" id="withdraw_qty"></td></tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td><button id="btn_withdraw" type="button" class="btn">Withdraw</button></td>
+            </tr>
+            <tr>
+                <td colspan="3"><span id="withdraw_status"></span></td>
+            </tr>
+        </table>
+    </form>
+
+    <hr>
+    <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
+    <script type="text/javascript">
+        function reset() {
+            deposit_status.innerHTML = "";
+            grant_status.innerHTML = "";
+            withdraw_status.innerHTML = "";
+        }
+
+		window.onload = function() {
+			btn_deposit.onclick = function() {
+			    deposit(from_addr, deposit_qty, this);
+			}
+
+			btn_grant_allowance.onclick = function() {
+			    grantAllowance(from_addr, grant_to_addr, grant_qty, this);
+			}
+
+			btn_withdraw.onclick = function() {
+			    withdraw(from_addr, withdraw_qty, this);
+			}
+
+			from_addr.onchange = function() {
+			    reset();
+			    getAccountBalance(from_addr, null);
+			    getAllowance(from_addr, null);
+			}
+
+			getAccountBalance(from_addr, null);
+
+			setInterval(
+			    function() {
+			        getAccountBalance(from_addr, null);
+			        getAllowance(from_addr, null);
+			        getContractBalance(from_addr, null);
+                }, 1000);
+		}
+    </script>
+</body>
+</html>

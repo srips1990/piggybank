@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>PiggyBank front-end</title>
+		<script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script language="javascript" type="text/javascript" src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+		<script language="javascript" type="text/javascript" src="myabi.js"></script>
+	</head>
+	<body>
+		<div>
+			<input type="text" id="account" style="width:310px" readonly>
+		</div><br>
+		<div id="userBalance"></div>
+		<div id="allowance"></div>
+		<div id="totalBalance"></div><br>
+
+		<div>
+			<input id="allowanceaddr" style="width:310px" placeholder="Recipient Address..." />
+			<input id="allowanceamt" type="number" placeholder="Amount..." />
+			<button id="btngrantallowance" submit="false">Grant Allowance</button>
+		</div><br>
+
+		<div>
+			<input id="depositamt"/>
+			<button id="btndeposit" submit="false">Deposit</button>
+		</div><br>
+
+		<div>
+			<input id="withdrawamt"/>
+			<button id="btnwithdraw" submit="false">Withdraw</button>
+		</div><br>
+
+
+		<div id="txStatus"></div>
+
+		<script>
+			var web3js;
+			var piggyBank;
+			var userAccount;
+			var piggyBankAddress = "0x344A718a55c6C7964E5e4d617091a806261DD9Ce"; //0x0F3e199443B57cB39062538C47263B8974549992
+
+
+			function startApp() {
+			
+				piggyBank = new web3js.eth.Contract(piggyBankABI, piggyBankAddress);
+				
+				var accountInterval = setInterval(function() {
+					// Check if account has changed
+					if (userAccount !== undefined) {
+						// userAccount = web3.eth.accounts[0];
+						// Call a function to update the UI with the new account
+
+						getAllowance()
+						.then(displayAllowance);
+						
+						getContractBalance()
+						.then(displayContractBalance);
+						
+						getUserBalance()
+						.then(displayUserBalance);
+
+						ethereum.request({ method: 'eth_requestAccounts' }).then(setUserAccount);
+
+					}
+				}, 100);
+
+				$("#btngrantallowance").click(function(){
+					grantAllowance($("#allowanceaddr").val(), $("#allowanceamt").val());
+				});
+
+				$("#btndeposit").click(function(){
+					deposit($("#depositamt").val());
+				});
+
+				$("#btnwithdraw").click(function(){
+					withdraw($("#withdrawamt").val());
+				});
+
+				// Start here
+			}
+
+			function displayAllowance(_allowance) {
+				console.log(_allowance);
+				$("#allowance").empty();
+				$("#allowance").html("<b>Allowance:</b> " + web3js.utils.fromWei(_allowance, 'ether') + " ethers");
+			}
+
+			function displayContractBalance(_balance) {
+				$("#totalBalance").empty();
+				$("#totalBalance").html("<b>Contract Balance:</b> " + web3js.utils.fromWei(_balance, 'ether') + " ethers");
+			}
+
+			function displayUserBalance(_balance) {
+				$("#userBalance").empty();
+				$("#userBalance").html("<b>Your Balance:</b> " + web3js.utils.fromWei(_balance, 'ether') + " ethers");
+			}
+
+			function getAllowance() {
+				return piggyBank.methods.allowance().call({ from: userAccount });
+			}
+
+			function getContractBalance() {
+				return web3js.eth.getBalance(piggyBankAddress);
+			}
+
+			function getUserBalance() {
+				return web3js.eth.getBalance(userAccount);
+			}
+		
+			function deposit(_amount) {
+				// This is going to take a while, so update the UI to let the user know
+				// the transaction has been sent
+				$("#txStatus").text("Transaction in progress...");
+				var depositAmount = web3js.utils.toWei(parseFloat(_amount).toString(), 'ether');
+				// Send the tx to our contract:
+				return piggyBank.methods.deposit()
+				.send({ from: userAccount, value: depositAmount.toString() })
+				.on("receipt", function(receipt) {
+					$("#txStatus").text("Tx ID: " + receipt.transactionHash);
+					console.log(receipt);
+				})
+				.on("error", function(error) {
+					$("#txStatus").text(error);
+				});
+			}
+		
+			function withdraw(_amount) {
+				// This is going to take a while, so update the UI to let the user know
+				// the transaction has been sent
+				$("#txStatus").text("Transaction in progress...");
+				var withdrawAmount = web3js.utils.toWei(parseFloat(_amount).toString(), 'ether');
+				// Send the tx to our contract:
+				return piggyBank.methods.withdraw(withdrawAmount.toString())
+				.send({ from: userAccount })
+				.on("receipt", function(receipt) {
+					$("#txStatus").text("Tx ID: " + receipt.transactionHash);
+					console.log(receipt);
+				})
+				.on("error", function(error) {
+					$("#txStatus").text(error);
+				});
+			}
+		
+			function grantAllowance(_address, _amount) {
+				// This is going to take a while, so update the UI to let the user know
+				// the transaction has been sent
+				$("#txStatus").text("Transaction in progress...");
+				var allowanceAmount = web3js.utils.toWei(parseFloat(_amount).toString(), 'ether');
+				// Send the tx to our contract:
+				return piggyBank.methods.grantAllowance(_address, allowanceAmount.toString())
+				.send({ from: userAccount })
+				.on("receipt", function(receipt) {
+					$("#txStatus").text("Tx ID: " + receipt.transactionHash);
+					console.log(receipt);
+				})
+				.on("error", function(error) {
+					$("#txStatus").text(error);
+				});
+			}
+
+			function setUserAccount(_accounts) {
+				$("#account").val(_accounts[0]);
+				userAccount = _accounts[0];
+			}
+
+			window.addEventListener('load', function() {
+				// Checking if Web3 has been injected by the browser (Mist/MetaMask)
+				if (typeof window.ethereum !== 'undefined') {
+					// Use Mist/MetaMask's provider
+					web3js = new Web3(web3.currentProvider);
+					ethereum.request({ method: 'eth_requestAccounts' }).then(function(_accounts){
+						setUserAccount(_accounts);
+						// Now you can start your app & access web3 freely:
+						startApp();
+					});
+				} else {
+					alert("Use MetaMask !!");
+				}
+
+			})
+		</script>
+	</body>
+</html>
