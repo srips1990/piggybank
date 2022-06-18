@@ -1,8 +1,9 @@
 
-var ajaxTransactionRequest = function(endpoint, method, params, status_elem, status_func, invoker) {
+var ajaxTransactionRequest = function(endpoint, method, params, status_elem, status_func, _invoker=undefined) {
 	var xmlhttp = new XMLHttpRequest();
-	if(invoker)
-        invoker.disabled = true;
+    console.log(_invoker);
+	if(_invoker)
+        _invoker.disabled = true;
     var headers = {
         "X-CSRFToken": document.getElementsByName('csrfmiddlewaretoken')[0].value
     }
@@ -12,14 +13,14 @@ var ajaxTransactionRequest = function(endpoint, method, params, status_elem, sta
 		xmlhttp.onreadystatechange = function () {
 
 			if (xmlhttp.readyState == 4) {
-			    if(invoker)
-			        invoker.disabled = false;
-                status_elem.innerHTML = "";
+			    if(_invoker)
+			        _invoker.disabled = false;
+//                status_elem.innerHTML = "";
 
 				if(xmlhttp.status == 200) {
 				    var resp_json = JSON.parse(xmlhttp.responseText);
 				    status_elem.style.color = 'green';
-				    status_elem.innerHTML += status_func(resp_json);
+				    status_elem.innerHTML = status_func(resp_json);
 				}
 				else if (xmlhttp.status == 500) {
 					console.log(xmlhttp);
@@ -60,25 +61,25 @@ var prepareAllowanceStatus = function(resp_json) {
     return resp_json.allowance;
 }
 
-var getAccountBalance = function(from_addr, invoker) {
+var getAccountBalance = function(from_addr) {
     var params = {
         "from_addr": from_addr.value
     }
     var status_elem = document.getElementById("balance");
 	try {
-		ajaxTransactionRequest("get_balance", "POST", params, status_elem, prepareBalanceStatus, invoker);
+		ajaxTransactionRequest("get_balance", "POST", params, status_elem, prepareBalanceStatus);
 	}
 	catch (e) {
 		console.log(e.description);
 	}
 }
 
-var getContractBalance = function(invoker) {
+var getContractBalance = function() {
     var params = {
     }
     var status_elem = document.getElementById("contract_balance");
 	try {
-		ajaxTransactionRequest("get_contract_balance", "GET", params, status_elem, prepareBalanceStatus, invoker);
+		ajaxTransactionRequest("get_contract_balance", "GET", params, status_elem, prepareBalanceStatus);
 	}
 	catch (e) {
 		console.log(e.description);
@@ -132,14 +133,14 @@ var withdraw = function(withdraw_addr, withdraw_qty, invoker) {
 	}
 }
 
-var getAllowance = function(user_addr, invoker) {
+var getAllowance = function(user_addr) {
     var params = {
         "user_addr": user_addr.value
     }
     var status_elem = document.getElementById("user_allowance");
 
 	try {
-		ajaxTransactionRequest("get_allowance", "POST", params, status_elem, prepareAllowanceStatus, invoker);
+		ajaxTransactionRequest("get_allowance", "POST", params, status_elem, prepareAllowanceStatus);
 	}
 	catch (e) {
 		console.log(e.description);

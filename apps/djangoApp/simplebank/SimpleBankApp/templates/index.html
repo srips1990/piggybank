@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Transact</title>
+    <title>Piggy Bank</title>
 	{% load static %}
     <link href="{% static 'css/common.css' %}" rel="stylesheet">
 </head>
@@ -119,17 +119,18 @@
 
 			from_addr.onchange = function() {
 			    reset();
-			    getAccountBalance(from_addr, null);
-			    getAllowance(from_addr, null);
+			    getAccountBalance(from_addr);
+			    getAllowance(from_addr);
 			}
 
-			getAccountBalance(from_addr, null);
+			getAccountBalance(from_addr);
+            getContractBalance();
 
 			setInterval(
 			    function() {
-			        getAccountBalance(from_addr, null);
-			        getAllowance(from_addr, null);
-			        getContractBalance(from_addr, null);
+			        getAccountBalance(from_addr);
+			        getAllowance(from_addr);
+			        getContractBalance();
                 }, 1000);
 		}
     </script>
